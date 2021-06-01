@@ -3,9 +3,9 @@ from pygame.locals import *
 import pickle
 import select
 import socket
-
-WIDTH = 1200
-HEIGHT = 1200
+import atexit
+WIDTH = 800
+HEIGHT = 800
 BUFFERSIZE = 2048
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -13,10 +13,10 @@ pygame.display.set_caption('Game')
 
 clock = pygame.time.Clock()
 
-sprite1 = pygame.image.load('test.png')
-sprite2 = pygame.image.load('test.png')
-sprite3 = pygame.image.load('test.png')
-sprite4 = pygame.image.load('test.png')
+character1 = pygame.image.load('img/1.png')
+character2 = pygame.image.load('img/2.png')
+character3 = pygame.image.load('img/2.png')
+character4 = pygame.image.load('img/1.png')
 
 serverAddr = '127.0.0.1'
 if len(sys.argv) == 2:
@@ -24,9 +24,15 @@ if len(sys.argv) == 2:
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((serverAddr, 4321))
 
+def exit_handler():
+      ge = ['player left', playerid, 0,0]
+      s.send(pickle.dumps(ge))
+
+atexit.register(exit_handler)
+
 playerid = 0
 
-sprites = { 0: sprite1, 1: sprite2, 2: sprite3, 3: sprite4 }
+characters = { 0: character1, 1: character2, 2: character3, 3: character4 }
 
 class Minion:
   def __init__(self, x, y, id):
@@ -53,7 +59,7 @@ class Minion:
       self.id = playerid
 
   def render(self):
-    screen.blit(sprites[self.id % 4], (self.x, self.y))
+    screen.blit(characters[self.id % 4], (self.x, self.y))
 
 
 #game events
@@ -123,3 +129,9 @@ while True:
   ge = ['position update', playerid, cc.x, cc.y]
   s.send(pickle.dumps(ge))
 s.close()
+
+
+
+
+
+

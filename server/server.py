@@ -19,10 +19,14 @@ minionmap = {}
 
 def updateWorld(message):
   arr = pickle.loads(message)
-  print(str(arr))
   playerid = arr[1]
   x = arr[2]
   y = arr[3]
+  if(arr[0]=="player left"):
+      print(arr[0])
+      print(playerid)
+      minionmap.pop(playerid)
+      print(str(minionmap))
 
   if playerid == 0: return
 
@@ -43,7 +47,7 @@ def updateWorld(message):
       remove.append(i)
       continue
     
-    print ('sent update data')
+    #print ('sent update data')
 
     for r in remove:
       outgoing.remove(r)
