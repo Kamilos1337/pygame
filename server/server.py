@@ -14,6 +14,7 @@ class Minion:
     self.x = 50
     self.y = 50
     self.ownerid = ownerid
+    self.myMap = "map1.jpg"
 
 minionmap = {}
 
@@ -22,6 +23,7 @@ def updateWorld(message):
   playerid = arr[1]
   x = arr[2]
   y = arr[3]
+  myMap = arr[4]
   if(arr[0]=="player left"):
       print(arr[0])
       print(playerid)
@@ -32,6 +34,7 @@ def updateWorld(message):
 
   minionmap[playerid].x = x
   minionmap[playerid].y = y
+  minionmap[playerid].myMap = myMap
 
   remove = []
 
@@ -39,7 +42,7 @@ def updateWorld(message):
     update = ['player locations']
 
     for key, value in minionmap.items():
-      update.append([value.ownerid, value.x, value.y])
+      update.append([value.ownerid, value.x, value.y, value.myMap])
     
     try:
       i.send(pickle.dumps(update))

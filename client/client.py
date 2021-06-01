@@ -4,11 +4,14 @@ import pickle
 import select
 import socket
 import atexit
-WIDTH = 800
-HEIGHT = 800
+WIDTH = 1200
+HEIGHT = 759
 BUFFERSIZE = 2048
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+image = pygame.image.load("img/map1.jpg").convert_alpha()
+          #INSIDE OF THE GAME LOOP
+
 pygame.display.set_caption('Game')
 
 clock = pygame.time.Clock()
@@ -25,22 +28,23 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((serverAddr, 4321))
 
 def exit_handler():
-      ge = ['player left', playerid, 0,0]
+      ge = ['player left', playerid, 0,0, "map1.jpg"]
       s.send(pickle.dumps(ge))
 
 atexit.register(exit_handler)
 
 playerid = 0
-
 characters = { 0: character1, 1: character2, 2: character3, 3: character4 }
 
-class Minion:
-  def __init__(self, x, y, id):
+class Details:
+  def __init__(self, x, y, id, myMap):
     self.x = x
     self.y = y
     self.vx = 0
     self.vy = 0
     self.id = id
+    self.myMap = myMap
+
 
   def update(self):
     self.x += self.vx
@@ -60,6 +64,17 @@ class Minion:
 
   def render(self):
     screen.blit(characters[self.id % 4], (self.x, self.y))
+  def changeMap(self):
+    if(self.myMap=="map1.jpg"):
+         self.myMap="map2.jpg"
+    else:
+         self.myMap="map1.jpg"
+    bg = pygame.image.load("img/"+self.myMap).convert_alpha()
+    screen.blit(bg, (0, 0))
+  def clearMap(self):
+    bg = pygame.image.load("img/"+self.myMap).convert_alpha()
+    screen.blit(bg, (0, 0))
+   
 
 
 #game events
@@ -81,9 +96,8 @@ class GameEvent:
     self.vx = vx
     self.vy = vy
 
-cc = Minion(50, 50, 0)
-
-minions = []
+Player = Details(50, 50, 0, "map1.jpg")
+players = []
 
 while True:
   ins, outs, ex = select.select([s], [], [], 0)
@@ -91,42 +105,46 @@ while True:
     gameEvent = pickle.loads(inm.recv(BUFFERSIZE))
     if gameEvent[0] == 'id update':
       playerid = gameEvent[1]
-      print(playerid)
     if gameEvent[0] == 'player locations':
       gameEvent.pop(0)
-      minions = []
-      for minion in gameEvent:
-        if minion[0] != playerid:
-          minions.append(Minion(minion[1], minion[2], minion[0]))
+      players = []
+      
+      for elem in gameEvent:
+        if (elem[0] != playerid):
+            players.append(Details(elem[1], elem[2], elem[0], elem[3]))
     
   for event in pygame.event.get():
     if event.type == QUIT:
     	pygame.quit()
     	sys.exit()
     if event.type == KEYDOWN:
-      if event.key == K_LEFT: cc.vx = -10
-      if event.key == K_RIGHT: cc.vx = 10
-      if event.key == K_UP: cc.vy = -10
-      if event.key == K_DOWN: cc.vy = 10
+      if event.key == K_LEFT: Player.vx = -10
+      if event.key == K_RIGHT: Player.vx = 10
+      if event.key == K_UP: Player.vy = -10
+      if event.key == K_DOWN: Player.vy = 10
+      if event.key == K_c: 
+          Player.changeMap()
+          pygame.display.flip()
     if event.type == KEYUP:
-      if event.key == K_LEFT and cc.vx == -10: cc.vx = 0
-      if event.key == K_RIGHT and cc.vx == 10: cc.vx = 0
-      if event.key == K_UP and cc.vy == -10: cc.vy = 0
-      if event.key == K_DOWN and cc.vy == 10: cc.vy = 0
+      if event.key == K_LEFT and Player.vx == -10: Player.vx = 0
+      if event.key == K_RIGHT and Player.vx == 10: Player.vx = 0
+      if event.key == K_UP and Player.vy == -10: Player.vy = 0
+      if event.key == K_DOWN and Player.vy == 10: Player.vy = 0
 
   clock.tick(60)
-  screen.fill((255,255,255))
+  Player.clearMap()
+  Player.update()
 
-  cc.update()
-
-  for m in minions:
-    m.render()
-
-  cc.render()
+  for m in players:
+    if(Player.myMap==m.myMap):
+        m.render()
+    
+  Player.render()
+  
 
   pygame.display.flip()
 
-  ge = ['position update', playerid, cc.x, cc.y]
+  ge = ['position update', playerid, Player.x, Player.y, Player.myMap]
   s.send(pickle.dumps(ge))
 s.close()
 
