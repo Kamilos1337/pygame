@@ -62,9 +62,17 @@ class Details:
       self.id = playerid
 
   def render(self):
-    print(self.id, self.character)
+    if(self.myMap=="map1.jpg"):
+        arrow =  pygame.image.load("img/nextmap.png")
+        screen.blit(arrow, (1130, 407))
+    if(self.myMap=="map2.jpg"):
+        arrow =  pygame.image.load("img/previousmap.png")
+        screen.blit(arrow, (0, 370))
     myCharacter =  pygame.image.load("img/"+self.character)
     screen.blit(myCharacter, (self.x, self.y))
+
+
+
   def changeMap(self):
     if(self.myMap=="map1.jpg"):
          self.myMap="map2.jpg"
@@ -72,6 +80,7 @@ class Details:
          self.myMap="map1.jpg"
     bg = pygame.image.load("img/"+self.myMap).convert_alpha()
     screen.blit(bg, (0, 0))
+
   def clearMap(self):
     bg = pygame.image.load("img/"+self.myMap).convert_alpha()
     screen.blit(bg, (0, 0))
@@ -103,7 +112,10 @@ players = []
 while True:
   ins, outs, ex = select.select([s], [], [], 0)
   for inm in ins:
-    gameEvent = pickle.loads(inm.recv(BUFFERSIZE))
+    try:
+        gameEvent = pickle.loads(inm.recv(BUFFERSIZE))
+    except:
+        ifer = "none"
     if gameEvent[0] == 'id update':
       playerid = gameEvent[1]
       print("Moje player id", playerid)
@@ -136,8 +148,16 @@ while True:
   clock.tick(60)
   Player.clearMap()
   Player.update()
-
+  print(Player.x, Player.y, Player.myMap)
+  if (Player.x>1080 and Player.y>350 and Player.y<400 and Player.myMap=="map1.jpg"):
+        Player.changeMap()
+  if (Player.x<50 and Player.y>320 and Player.y<400 and Player.myMap=="map2.jpg"):
+        Player.changeMap()
   for m in players:
+    if (m.x>1150 and m.y>404 and m.y<464 and m.myMap=="map1.jpg"):
+        m.changeMap()
+    if (m.x<50 and m.y>320 and m.y<400 and m.myMap=="map2.jpg"):
+        m.changeMap()
     if(Player.myMap==m.myMap):
         m.render()
 
