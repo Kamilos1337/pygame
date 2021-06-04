@@ -18,8 +18,8 @@ clock = pygame.time.Clock()
 
 character1 = pygame.image.load('img/1.png')
 character2 = pygame.image.load('img/2.png')
-character3 = pygame.image.load('img/2.png')
-character4 = pygame.image.load('img/1.png')
+character3 = pygame.image.load('img/3.png')
+character4 = pygame.image.load('img/4.png')
 
 serverAddr = '127.0.0.1'
 if len(sys.argv) == 2:
@@ -37,14 +37,14 @@ playerid = 0
 characters = { 0: character1, 1: character2, 2: character3, 3: character4 }
 
 class Details:
-  def __init__(self, x, y, id, myMap):
+  def __init__(self, x, y, id, myMap, character):
     self.x = x
     self.y = y
     self.vx = 0
     self.vy = 0
     self.id = id
     self.myMap = myMap
-
+    self.character = character
 
   def update(self):
     self.x += self.vx
@@ -74,14 +74,14 @@ class Details:
   def clearMap(self):
     bg = pygame.image.load("img/"+self.myMap).convert_alpha()
     screen.blit(bg, (0, 0))
-   
+
 
 
 #game events
 #['event type', param1, param2]
 #
-#event types: 
-# id update 
+#event types:
+# id update
 # ['id update', id]
 #
 # player locations
@@ -101,18 +101,18 @@ players = []
 
 while True:
   ins, outs, ex = select.select([s], [], [], 0)
-  for inm in ins: 
+  for inm in ins:
     gameEvent = pickle.loads(inm.recv(BUFFERSIZE))
     if gameEvent[0] == 'id update':
       playerid = gameEvent[1]
     if gameEvent[0] == 'player locations':
       gameEvent.pop(0)
       players = []
-      
+
       for elem in gameEvent:
         if (elem[0] != playerid):
             players.append(Details(elem[1], elem[2], elem[0], elem[3]))
-    
+
   for event in pygame.event.get():
     if event.type == QUIT:
     	pygame.quit()
@@ -122,7 +122,7 @@ while True:
       if event.key == K_RIGHT: Player.vx = 10
       if event.key == K_UP: Player.vy = -10
       if event.key == K_DOWN: Player.vy = 10
-      if event.key == K_c: 
+      if event.key == K_c:
           Player.changeMap()
           pygame.display.flip()
     if event.type == KEYUP:
@@ -138,18 +138,12 @@ while True:
   for m in players:
     if(Player.myMap==m.myMap):
         m.render()
-    
+
   Player.render()
-  
+
 
   pygame.display.flip()
 
   ge = ['position update', playerid, Player.x, Player.y, Player.myMap]
   s.send(pickle.dumps(ge))
 s.close()
-
-
-
-
-
-
