@@ -3,6 +3,7 @@ from pygame.locals import *
 import pickle
 import select
 import socket
+import random
 import atexit
 WIDTH = 1200
 HEIGHT = 759
@@ -16,10 +17,7 @@ pygame.display.set_caption('Game')
 
 clock = pygame.time.Clock()
 
-character1 = pygame.image.load('img/1.png')
-character2 = pygame.image.load('img/2.png')
-character3 = pygame.image.load('img/3.png')
-character4 = pygame.image.load('img/4.png')
+
 
 serverAddr = '127.0.0.1'
 if len(sys.argv) == 2:
@@ -28,13 +26,14 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((serverAddr, 4321))
 
 def exit_handler():
-      ge = ['player left', playerid, 0,0, "map1.jpg"]
+      ge = ['player left', playerid, 0,0, "map1.jpg", ""]
       s.send(pickle.dumps(ge))
 
 atexit.register(exit_handler)
 
 playerid = 0
-characters = { 0: character1, 1: character2, 2: character3, 3: character4 }
+characters = ["1.png", "2.png", "3.png", "4.png"]
+random = characters[random.randint(0,3)]
 
 class Details:
   def __init__(self, x, y, id, myMap, character):
@@ -63,7 +62,9 @@ class Details:
       self.id = playerid
 
   def render(self):
-    screen.blit(characters[self.id % 4], (self.x, self.y))
+    print(self.id, self.character)
+    myCharacter =  pygame.image.load("img/"+self.character)
+    screen.blit(myCharacter, (self.x, self.y))
   def changeMap(self):
     if(self.myMap=="map1.jpg"):
          self.myMap="map2.jpg"
@@ -96,7 +97,7 @@ class GameEvent:
     self.vx = vx
     self.vy = vy
 
-Player = Details(50, 50, 0, "map1.jpg")
+Player = Details(50, 50, 0, "map1.jpg", random)
 players = []
 
 while True:
@@ -105,13 +106,14 @@ while True:
     gameEvent = pickle.loads(inm.recv(BUFFERSIZE))
     if gameEvent[0] == 'id update':
       playerid = gameEvent[1]
+      print("Moje player id", playerid)
     if gameEvent[0] == 'player locations':
       gameEvent.pop(0)
       players = []
 
       for elem in gameEvent:
         if (elem[0] != playerid):
-            players.append(Details(elem[1], elem[2], elem[0], elem[3]))
+            players.append(Details(elem[1], elem[2], elem[0], elem[3], elem[4]))
 
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -143,7 +145,6 @@ while True:
 
 
   pygame.display.flip()
-
-  ge = ['position update', playerid, Player.x, Player.y, Player.myMap]
+  ge = ['position update', playerid, Player.x, Player.y, Player.myMap, Player.character]
   s.send(pickle.dumps(ge))
 s.close()
